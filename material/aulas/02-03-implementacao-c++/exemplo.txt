@@ -1,0 +1,4 @@
+Olá, este é um exemplo de texto em arquivo.
+Mais uma linha no arquivo.
+Agora chega!
+Fimmm!
