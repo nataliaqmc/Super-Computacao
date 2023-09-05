@@ -179,6 +179,106 @@ O que você pode dizer sobre o desempenho do programa? Por que há diferença de
 !!! tip
     Dica: Verifique a discussão no StackOverflow sobre isso. Neste link https://stackoverflow.com/questions/9936132/why-does-the-order-of-the-loops-affect-performance-when-iterating-over-a-2d-arra
 
+## Visualização gráfica
+
+Muitas vezes o output do valgrind é suficiente para a nossa análise. Todavia, é possível também obter visualizações gráficas do número de chamadas das funções. Há uma ferramenta bem interessante, desenvolvida em Python, denominada `gprof2dot`. Essa ferramenta converte dados de perfil de desempenho, gerados por ferramentas como o Callgrind do Valgrind, em gráficos de chamadas visualmente compreensíveis. Ao processar os resultados de profiling, ele cria um gráfico que representa as interações entre funções, evidenciando as chamadas mais onerosas e ajudando a identificar gargalos de desempenho em um programa. Isso permite uma análise mais intuitiva e abrangente das relações entre as funções e a alocação de recursos computacionais, auxiliando na otimização de códigos e no aprimoramento da eficiência do software.
+
+Vamos fazer um teste nessa ferramenta? Para isso, você vai precisar instalar a bibliteca `graphviz` (com `apt-get install graphviz`, por exemplo) e também a biblioteca `gprof2dot` do Python (com `pip install gprof2dot`).
+
+Considere o seguinte código em C++ para analisarmos com essa ferramenta:
+
+```cpp
+#include <iostream>
+#include <cmath>
+#include <chrono>
+
+void heavyCalculation() {
+    for (int i = 0; i < 100000; ++i) {
+        double result = std::sqrt(static_cast<double>(i));
+    }
+}
+
+void intermediateFunction() {
+    for (int i = 0; i < 1000; ++i) {
+        heavyCalculation();
+    }
+}
+
+void mainFunction() {
+    for (int i = 0; i < 5; ++i) {
+        intermediateFunction();
+    }
+}
+
+int main() {
+    auto start = std::chrono::high_resolution_clock::now();
+
+    mainFunction();
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl;
+
+    return 0;
+}
+
+```
+
+Nesse código, temos três funções:
+
+- heavyCalculation: Uma função que realiza um grande número de operações matemáticas (cálculos de raiz quadrada) em um loop.
+
+- intermediateFunction: Chama a função heavyCalculation repetidamente para criar um cenário onde a função intermediária é onerosa.
+
+- mainFunction: Chama a função intermediária várias vezes.
+
+
+Ao executar esse código, você deve obter um tempo de execução considerável, já que o loop dentro de heavyCalculation é repetido muitas vezes. Isso deve gerar um perfil de desempenho interessante quando analisado com o gprof2dot.py.
+
+Ao compilar, use a opção `-O0`, para que o compilador não otimize as chamadas recorrentes e possamos visualizar melhor nosso grafo.
+
+Supondo que seu código foi salvo com o nome `profile.cpp`, execute os seguintes comandos:
+
+```
+g++ -Wall -O0 -g profile.cpp -o profile
+```
+
+Na sequencia, execute o valgrind:
+
+```
+valgrind --tool=callgrind ./profile
+```
+
+Neste caso, um possível output seria:
+
+```
+==9228== Callgrind, a call-graph generating cache profiler
+==9228== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==9228== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==9228== Command: ./profile
+==9228== 
+==9228== For interactive control, run 'callgrind_control -h'.
+Time taken: 243965 milliseconds
+==9228== 
+==9228== Events    : Ir
+==9228== Collected : 10002410933
+==9228== 
+==9228== I   refs:      10,002,410,933
+
+```
+
+Por fim, execute a gprof2dot:
+
+```
+!gprof2dot  -n0.1 -f callgrind callgrind.out.9228 | dot -Tsvg -o output.svg
+```
+
+Você deve obter um grafo similar ao abaixo:
+
+![grafo](resultado_profile.svg)
+
+
 
 ## Distância: Euclides ingênuo 
 
