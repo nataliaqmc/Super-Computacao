@@ -51,7 +51,7 @@ nav:
         - "15 - GPU - Customização": aulas/16-gpu-customizacao/index.md
         - "16 - Clusters - Slurm" : aulas/21-SLURM/index.md
         - "17 - MPI": aulas/MPI/index.md
-        # - "17 - MPI - Reduções": aulas/19-MPI_REDUCE-mpi/index.md
+        - "18 - MPI e OpenMP": aulas/MPI-OpenMP/index.md
         # - "18 - MPI - Broadcasting": aulas/20 - Broadcasting-mpi/index.md
        
        
